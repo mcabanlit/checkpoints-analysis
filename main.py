@@ -90,27 +90,27 @@ validation_datagen = ImageDataGenerator(rescale=1./255)
 # this is a generator that will read pictures found in
 # subfolers of 'data/train', and indefinitely generate
 # batches of augmented image data
-# train_generator = train_datagen.flow_from_directory(
-#         'data/cell_images/train',  # this is the input directory
-#         target_size=(150, 150),  # all images will be resized to 64x64
-#         batch_size=batch_size,
-#         class_mode='binary')  # since we use binary_crossentropy loss, we need binary labels
+train_generator = train_datagen.flow_from_directory(
+        'data/cell_images/train',  # this is the input directory
+        target_size=(150, 150),  # all images will be resized to 64x64
+        batch_size=batch_size,
+        class_mode='binary')  # since we use binary_crossentropy loss, we need binary labels
 
 # this is a similar generator, for validation data
-# validation_generator = validation_datagen.flow_from_directory(
-#         'data/cell_images/test',
-#         target_size=(150, 150),
-#         batch_size=batch_size,
-#         class_mode='binary')
+validation_generator = validation_datagen.flow_from_directory(
+        'data/cell_images/test',
+        target_size=(150, 150),
+        batch_size=batch_size,
+        class_mode='binary')
 
-training_generator = ImageDataGenerator(rescale=1./255, rotation_range=7, horizontal_flip=True, shear_range=0.2, height_shift_range=0.07, zoom_range=0.2)
-test_generator = ImageDataGenerator(rescale=1./255)
+# training_generator = ImageDataGenerator(rescale=1./255, rotation_range=7, horizontal_flip=True, shear_range=0.2, height_shift_range=0.07, zoom_range=0.2)
+# test_generator = ImageDataGenerator(rescale=1./255)
+#
+# training_base= training_generator.flow_from_directory('data/cell_images/train' , target_size=(150,150),batch_size=1, class_mode='binary')
+#
+# test_base = test_generator.flow_from_directory('data/cell_images/test', target_size=(150, 150),batch_size=1, class_mode='binary')
 
-training_base= training_generator.flow_from_directory('data/cell_images/train' , target_size=(150,150),batch_size=1, class_mode='binary')
-
-test_base = test_generator.flow_from_directory('data/cell_images/test', target_size=(150, 150),batch_size=1, class_mode='binary')
-
-print(training_base.samples, test_base.samples)
+# print(training_base.samples, test_base.samples)
 #Add Callbacks, e.g. ModelCheckpoints, earlystopping, csvlogger.
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 
@@ -124,13 +124,14 @@ callbacks_list = [checkpoint]
 #We can now use these generators to train our model.
 #Give this a name so we can call it later for plotting loss, accuracy etc. as a function of epochs.
 history = model.fit_generator(
-        # train_generator,
-        training_base,
-        steps_per_epoch=49,
+        train_generator,
+        # training_base,
+        # steps_per_epoch=2000 // batch_size,
+        steps_per_epoch=15,
         # steps_per_epoch=2000 // batch_size,    #The 2 slashes division return rounded integer
         epochs=5,
-        validation_data=test_base,
-        # validation_data=validation_generator,
+        # validation_data=test_base,
+        validation_data=validation_generator,
         validation_steps=800 // batch_size,
         callbacks=callbacks_list)
 model.save('malaria_augmented_model.h5')  # always save your weights after training or during training
