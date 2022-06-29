@@ -1,6 +1,7 @@
 from matplotlib import pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.utils import  img_to_array,  load_img
+import time
 import scipy
 
 datagen = ImageDataGenerator(
@@ -70,7 +71,8 @@ model.compile(loss='binary_crossentropy',
 
 print(model.summary())
 ###############################################################
-batch_size = 16
+batch_size = 10
+# 16
 #Let's prepare our data. We will use .flow_from_directory()
 #to generate batches of image data (and their labels)
 #directly from our png in their respective folders.
@@ -115,30 +117,38 @@ validation_generator = validation_datagen.flow_from_directory(
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 
 #ModelCheckpoint callback saves a model at some interval.
-filepath="data/saved_models/weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5" #File name includes epoch and validation accuracy.
+filepath="saved_models/model.{epoch:02d}-{val_accuracy:.2f}.h5" #File name includes epoch and validation accuracy.
+# filepath = "saved_models/weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"  # File name includes epoch and validation accuracy.
+# filepath="data/saved_models/weights-improvement.hdf5" #File name includes epoch and validation accuracy.
 #Use Mode = max for accuracy and min for loss.
-checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+checkpoint = ModelCheckpoint(filepath, monitor="val_accuracy", verbose=1, save_best_only=True, mode='max')
+
 
 callbacks_list = [checkpoint]
 
 #We can now use these generators to train our model.
 #Give this a name so we can call it later for plotting loss, accuracy etc. as a function of epochs.
-history = model.fit_generator(
+history = model.fit(
         train_generator,
         # training_base,
-        # steps_per_epoch=2000 // batch_size,
-        steps_per_epoch=15,
+        steps_per_epoch=2000 // batch_size,
+        # steps_per_epoch=15,
         # steps_per_epoch=2000 // batch_size,    #The 2 slashes division return rounded integer
-        epochs=5,
+        epochs=6,
         # validation_data=test_base,
         validation_data=validation_generator,
-        validation_steps=800 // batch_size,
+        # validation_steps=1,
+        # validation_steps=800 // batch_size,
         callbacks=callbacks_list)
 model.save('malaria_augmented_model.h5')  # always save your weights after training or during training
 
 # evaluating the model
-train_loss, train_acc = model.evaluate_generator(train_generator, steps=16)
-validation_loss, test_acc = model.evaluate_generator(validation_generator, steps=16)
+# train_loss, train_acc = model.evaluate_generator(train_generator, steps=15)
+# validation_loss, test_acc = model.evaluate_generator(validation_generator, steps=10)
+
+train_loss, train_acc = model.evaluate(train_generator, steps=15)
+validation_loss, test_acc = model.evaluate(validation_generator, steps=10)
+
 print('Train: %.3f, Test: %.3f' % (train_acc, test_acc))
 
 
